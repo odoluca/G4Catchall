@@ -356,7 +356,7 @@ def G4HScore(seq,minRepeat=2,penalizeGC=True):
         k=1
         GTract=False
         while seq[i]=="G":
-            tractScore=[(min(k-1,4))]*k #derivation from original algorithm: tractScore=[min(k-1,16)]*k
+            tractScore=[(min(k,4))] #derivation from original algorithm: tractScore=[min(k-1,16)]*k
             # region derivation from original algorithm: if prev is "C" apply bigger penalty. penalizes GCs
             if penalizeGC:
                 try:
@@ -371,7 +371,7 @@ def G4HScore(seq,minRepeat=2,penalizeGC=True):
             if i==len(seq): break
         if not GTract:
             while seq[i]=="C":
-                tractScore=[max(-k+1,-4)]*k #derivation from original algorithm: tractScore=[max(-k,-16)]*k
+                tractScore=[max(-k,-4)] #derivation from original algorithm: tractScore=[max(-k,-16)]*k
                 # region derivation from original algorithm: if prev is "G" apply bigger penalty. penalizes GCs
                 if penalizeGC:
                     try:
