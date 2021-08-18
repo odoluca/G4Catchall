@@ -1,7 +1,8 @@
 # G4Catchall
 G4Catchall is a python package designed to scan given DNA/RNA sequences for G-quadruplexes with or without atypical features
 
-PUBLICATION IN REVIEW...
+Please cite: 
+Doluca, O. (2019). G4Catchall: A G-quadruplex prediction approach considering atypical features. Journal Of Theoretical Biology, 463, 92-98. doi: 10.1016/j.jtbi.2018.12.007
 
 DESCRIPTION
     
