@@ -25,20 +25,30 @@ parser=argparse.ArgumentParser(
         
     EXAMPLE
         ##Test data:
-        echo '>mychr' > /tmp/mychr.fa 
-        echo 'TTGGGTTGGGACTGGGTACGGGAATAAATAGGTTAGGAATGGATAGGAT' >> /tmp/mychr.fa
+        echo ^>mychr > mychr.fa 
+        echo TTGGGTTGGGACTGGGTACGGGAATAAATAGGTTAGGAATGGATAGGATCCCTTCCCTTCCCTTCCCTTGGCGCGGCCGGCGG >> mychr.fa
         
-        G4Catchall.py -f /tmp/mychr.fa --G3L 1..3 --G2L 1..3
-            mychr   2   22  20  +   GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG
-            mychr   30  47  17  +   GGTTAGGAATGGATAGG   GGTTAGGAATGGATAGG
+
+        python G4Catchall.py -f mychr.fa --G3L 1..3 
+        mychr   2       22      20      +       GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG    1.7
+        mychr   49      67      18      -       CCCTTCCCTTCCCTTCCC      GGGAAGGGAAGGGAAGGG      -2.0
         
-        ## G4Hunter scores can be calculated and included at the end of the line.
-        G4Catchall.py -f /tmp/mychr.fa --G3L 1..3 --G4H
-            mychr   2   22  20  +   GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG    2.11
+        ## 2 Guanine-tetrad G-quadruplexes can be included using --G2L
+        python G4Catchall.py -f mychr.fa --G3L 1..3 --G2L 1..3
+        mychr   2       22      20      +       GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG    1.7
+        mychr   30      47      17      +       GGTTAGGAATGGATAGG       GGTTAGGAATGGATAGG       0.9411764705882353
+        mychr   49      67      18      -       CCCTTCCCTTCCCTTCCC      GGGAAGGGAAGGGAAGGG      -2.0
+
+        ## Score threshold can be changed using --G4Threshold
+        python G4Catchall.py -f mychr.fa --G3L 1..3 --G2L 1..3 --G4HThreshold 0.4
+        mychr   2       22      20      +       GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG    1.7
+        mychr   30      47      17      +       GGTTAGGAATGGATAGG       GGTTAGGAATGGATAGG       0.9411764705882353
+        mychr   49      67      18      -       CCCTTCCCTTCCCTTCCC      GGGAAGGGAAGGGAAGGG      -2.0
+        mychr   69      83      14      +       GGCGCGGCCGGCGG  GGCGCGGCCGGCGG  0.7142857142857143
                     
         ##When no fasta file is indicated, it only constructs the regex from given parameters and prints.
-        G4Catchall.py -I 0
-            ([Gg]{3,})  (\w{1,8})  ([Gg]{3,}) (\w{1,8}) ([Gg]{3,}) (\w{1,8}) ([Gg]{3,})
+        python G4Catchall.py --G3L 1..3 -I 0
+            ([Gg]{3,})  (\w{1,3})  ([Gg]{3,}) (\w{1,3}) ([Gg]{3,}) (\w{1,3}) ([Gg]{3,})
         
     DOWNLOAD
         G4Catchall.py is hosted at http://github.com/odoluca/G4Catchall
@@ -203,7 +213,8 @@ G4H_scoring=False
 max_G4H_score=4
 
 
-if args.G4HThreshold is not None: args.G4HunterScores=True
+if args.G4HThreshold is not None: args.G4HunterScores=True #Unused. G4H scores are calculated in all cases.
+else: args.G4HThreshold=0.9 #default G4H threshold
 
 G2sAllowed =False
 if args.G2GQs_allowed: G2sAllowed=True
@@ -312,7 +323,7 @@ intab = 'actguACTGU'
 outtab = 'tgacaTGACA'
 
 if args.no_reverse is False:
-    transtab = string.maketrans(intab, outtab)
+    transtab = str.maketrans(intab, outtab)
     regrev = reg.translate(transtab)
 else:
     regrev = ''
@@ -348,16 +359,17 @@ see Amina Bedrat, Laurent Lacroix, Jean-Louis Mergny; Re-evaluation of G-quadrup
 https://doi.org/10.1093/nar/gkw006
 """
 
-def G4HScore(seq,minRepeat=2,penalizeGC=True):
+def G4HScore(seq,penalizeGC=True):
     i=0
     baseScore=[]
     while i<len(seq):
-        tractScore=[0]
+        tractScore=[]
         k=1
         GTract=False
         while seq[i]=="G":
-            tractScore=[(min(k,4))] #derivation from original algorithm: tractScore=[min(k-1,16)]*k
-            # region derivation from original algorithm: if prev is "C" apply bigger penalty. penalizes GCs
+            tractScore=[(min(k,4))]*k #I suggest a derivation from original algorithm: tractScore=[min(k-1,16)]*k
+            # tractScore=[min(k-1,16)]*k
+            # Also suggested region derivation from original algorithm: if prev is "C" apply bigger penalty. penalizes GCs
             if penalizeGC:
                 try:
                     pass
@@ -371,8 +383,9 @@ def G4HScore(seq,minRepeat=2,penalizeGC=True):
             if i==len(seq): break
         if not GTract:
             while seq[i]=="C":
-                tractScore=[max(-k,-4)] #derivation from original algorithm: tractScore=[max(-k,-16)]*k
-                # region derivation from original algorithm: if prev is "G" apply bigger penalty. penalizes GCs
+                tractScore=[max(-k,-4)]*k # I suggest a derivation from original algorithm: tractScore=[max(-k,-16)]*k
+                # tractScore = [max(-k, -16)] * k
+                # Also suggested region derivation from original algorithm: if prev is "G" apply bigger penalty. penalizes GCs
                 if penalizeGC:
                     try:
                         pass
@@ -384,13 +397,14 @@ def G4HScore(seq,minRepeat=2,penalizeGC=True):
                 i+=1
                 GTract=True
                 if i == len(seq): break
-        baseScore=baseScore.__add__(tractScore)
+        baseScore=baseScore.__add__(tractScore )
         if not GTract: i += 1
         # print baseScore
     Score=0
     for value in baseScore:
         Score+=value
     return float(Score)/len(seq)
+    #The suggestions are not applied
 
 """                               LIST SORTER
 Code to sort list of lists
@@ -435,30 +449,30 @@ while True:
             if MergeOverlapping and (len(gquad_list)>0) and gquad_list[-1][4]=="+" and (m.start()<=gquad_list[-1][2]) and (chr==gquad_list[-1][0]):
                 orj=gquad_list[-1]
                 new_seq=orj[5]+m.group(0)[orj[2]-m.start():]
-                G4Hscore=G4HScore(new_seq,2,True)
+                G4Hscore=G4HScore(new_seq,False)
                 if abs(G4Hscore)>=(args.G4HThreshold):
                     gquad_list[-1]=[chr, orj[1], m.end(), m.end()-orj[1], '+', new_seq,
-                                new_seq,G4HScore(new_seq,2,True)]
+                                new_seq,G4HScore(new_seq,False)]
             else:
-                G4Hscore=G4HScore(m.group(0),2,True)
+                G4Hscore=G4HScore(m.group(0),False)
                 if abs(G4Hscore)>=(args.G4HThreshold):
                     gquad_list.append([chr, m.start(), m.end(), len(m.group(0)), '+', m.group(0),
-                                 m.group(0),G4HScore(m.group(0),2,True)])  # modification: added sequence again
+                                 m.group(0),G4HScore(m.group(0),False)])  # modification: added sequence again
     if args.no_reverse is False:
         if not args.max_GQ_length or len(m.group(0)) <= args.max_GQ_length:
             for m in psq_re_r.finditer(ref_seq,overlapped=True):
                 if MergeOverlapping and (len(gquad_list) > 0) and gquad_list[-1][4]=="-" and (m.start() <= gquad_list[-1][2]) and (chr == gquad_list[-1][0]):
                     orj = gquad_list[-1]
                     new_seq = orj[5] + m.group(0)[orj[2] - m.start():]
-                    G4Hscore = G4HScore(new_seq, 2, True)
+                    G4Hscore = G4HScore(new_seq,  False)
                     if abs(G4Hscore) >= (args.G4HThreshold):
                         gquad_list[-1] = [chr, orj[1], m.end(), m.end() - orj[1], '-', new_seq,
-                                      ReverseComplement(new_seq),G4HScore(new_seq,2,True)]
+                                      ReverseComplement(new_seq),G4HScore(new_seq,False)]
                 else:
-                    G4Hscore = G4HScore(m.group(0), 2, True)
+                    G4Hscore = G4HScore(m.group(0),  False)
                     if abs(G4Hscore) >= (args.G4HThreshold):
                         gquad_list.append([chr, m.start(), m.end(), len(m.group(0)), '-', m.group(0),
-                                       ReverseComplement(m.group(0)), G4HScore(m.group(0),2,True)])  # modification: added reverse complement
+                                       ReverseComplement(m.group(0)), G4HScore(m.group(0),True)])  # modification: added reverse complement
 
 
     chr = re.sub('^>', '', line)

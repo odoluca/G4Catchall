@@ -21,18 +21,27 @@ DESCRIPTION
         
     EXAMPLE
         ##Test data:
-        echo '>mychr' > /tmp/mychr.fa 
-        echo 'TTGGGTTGGGACTGGGTACGGGAATAAATAGGTTAGGAATGGATAGGAT' >> /tmp/mychr.fa
+        echo ^>mychr > mychr.fa 
+        echo TTGGGTTGGGACTGGGTACGGGAATAAATAGGTTAGGAATGGATAGGATCCCTTCCCTTCCCTTCCCTTGGCGCGGCCGGCGG >> mychr.fa
         
-        G4Catchall.py -f /tmp/mychr.fa --G3L 1..3 --G2L 1..3
-            mychr   2   22  20  +   GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG
-            mychr   30  47  17  +   GGTTAGGAATGGATAGG   GGTTAGGAATGGATAGG
+
+        python G4Catchall.py -f mychr.fa --G3L 1..3 
+        mychr   2       22      20      +       GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG    1.7
+        mychr   49      67      18      -       CCCTTCCCTTCCCTTCCC      GGGAAGGGAAGGGAAGGG      -2.0
         
-        ## G4Hunter scores can be calculated and included at the end of the line.
-        G4Catchall.py -f /tmp/mychr.fa --G3L 1..3 --G4H
-            mychr   2   22  20  +   GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG    2.11
+        ## 2 Guanine-tetrad G-quadruplexes can be included using --G2L
+        python G4Catchall.py -f mychr.fa --G3L 1..3 --G2L 1..3
+        mychr   2       22      20      +       GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG    1.7
+        mychr   30      47      17      +       GGTTAGGAATGGATAGG       GGTTAGGAATGGATAGG       0.9411764705882353
+        mychr   49      67      18      -       CCCTTCCCTTCCCTTCCC      GGGAAGGGAAGGGAAGGG      -2.0
+
+        ## Score threshold can be changed using --G4Threshold
+        python G4Catchall.py -f mychr.fa --G3L 1..3 --G2L 1..3 --G4HThreshold 0.4
+        mychr   2       22      20      +       GGGTTGGGACTGGGTACGGG    GGGTTGGGACTGGGTACGGG    1.7
+        mychr   30      47      17      +       GGTTAGGAATGGATAGG       GGTTAGGAATGGATAGG       0.9411764705882353
+        mychr   49      67      18      -       CCCTTCCCTTCCCTTCCC      GGGAAGGGAAGGGAAGGG      -2.0
+        mychr   69      83      14      +       GGCGCGGCCGGCGG  GGCGCGGCCGGCGG  0.7142857142857143
                     
         ##When no fasta file is indicated, it only constructs the regex from given parameters and prints.
-        G4Catchall.py -I 0
-            ([Gg]{3,})  (\w{1,8})  ([Gg]{3,}) (\w{1,8}) ([Gg]{3,}) (\w{1,8}) ([Gg]{3,})
-        
+        python G4Catchall.py --G3L 1..3 -I 0
+            ([Gg]{3,})  (\w{1,3})  ([Gg]{3,}) (\w{1,3}) ([Gg]{3,}) (\w{1,3}) ([Gg]{3,})
