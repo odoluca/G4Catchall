@@ -52,6 +52,10 @@ parser=argparse.ArgumentParser(
         
     DOWNLOAD
         G4Catchall.py is hosted at http://github.com/odoluca/G4Catchall
+    
+    PLEASE CITE
+        Doluca, O. (2019). G4Catchall: A G-quadruplex prediction approach considering atypical features. Journal Of Theoretical Biology, 463, 92-98. doi: 10.1016/j.jtbi.2018.12.007
+
 
 """,
     formatter_class=argparse.RawTextHelpFormatter)
