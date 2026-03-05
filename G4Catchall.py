@@ -163,8 +163,8 @@ found at the very edge of the target sequence.
 
 parser.add_argument('--G4HThreshold',
 type=float,
-help="""Removes G-quadruplex predictions with absolute scores lower than the preceding 
-threshold value. Default: 0.0.
+help="""Removes G-quadruplex predictions with absolute G4Hunter scores lower 
+than the preceding threshold value. Default: 0.0.
 
 """)
 
