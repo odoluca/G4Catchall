@@ -161,18 +161,10 @@ found at the very edge of the target sequence.
 
 """)
 
-parser.add_argument('--G4H',
-action='store_true',
-help="""By default the program extracts only matching sequences. If 
-used, discovered sequences are evaluated based on G4Hunter algorithm.
-Low G4Hunter scores can be eliminated using --G4HThreshold argument. 
-
-""")
-
 parser.add_argument('--G4HThreshold',
 type=float,
-help="""Removes G-quadruplex predictions with lower scores than the preceding 
-threshold value. If used, --G4H usage is not necessary.
+help="""Removes G-quadruplex predictions with absolute scores lower than the preceding 
+threshold value. Default: 0.0.
 
 """)
 
@@ -218,7 +210,7 @@ max_G4H_score=4
 
 
 if args.G4HThreshold is not None: args.G4HunterScores=True #Unused. G4H scores are calculated in all cases.
-else: args.G4HThreshold=0.9 #default G4H threshold
+else: args.G4HThreshold=0.0 #default G4H threshold
 
 G2sAllowed =False
 if args.G2GQs_allowed: G2sAllowed=True
@@ -365,6 +357,7 @@ https://doi.org/10.1093/nar/gkw006
 
 def G4HScore(seq,penalizeGC=True):
     i=0
+    seq=seq.upper()
     baseScore=[]
     while i<len(seq):
         tractScore=[]
