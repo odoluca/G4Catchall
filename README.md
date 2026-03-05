@@ -114,10 +114,6 @@ DESCRIPTION
                             of the sequence if G-quadruplex forming sequences are expected to be 
                             found at the very edge of the target sequence.
 
-      --G4H                 By default the program extracts only matching sequences. If 
-                            used, discovered sequences are evaluated based on G4Hunter algorithm.
-                            Low G4Hunter scores can be eliminated using --G4HThreshold argument. 
-
       --G4HThreshold G4HTHRESHOLD
-                            Removes G-quadruplex predictions with lower scores than the preceding 
-                            threshold value. If used, --G4H usage is not necessary.
+                            Removes G-quadruplex predictions with absolute G4Hunter scores lower than
+                            the preceding threshold value. Default: 0.0.
